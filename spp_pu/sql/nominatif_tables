@@ -1,0 +1,77 @@
+-- ═══════════════════════════════════════════════════
+-- TABEL NOMINATIF untuk semua jenis SPP
+-- Jalankan di phpMyAdmin → database spp_pu → tab SQL
+-- ═══════════════════════════════════════════════════
+
+-- 1. Nominatif Gaji
+CREATE TABLE IF NOT EXISTS nominatif_gaji (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  surat_id INT NOT NULL,
+  urutan INT DEFAULT 1,
+  nama VARCHAR(200),
+  posisi VARCHAR(300),
+  kode_sub_komponen VARCHAR(60),
+  npwp VARCHAR(30),
+  nama_rekening VARCHAR(200),
+  nama_bank VARCHAR(100),
+  no_rekening VARCHAR(50),
+  jumlah_bulan INT DEFAULT 1,
+  gaji BIGINT DEFAULT 0,
+  total BIGINT DEFAULT 0,
+  pph BIGINT DEFAULT 0,
+  penerimaan_bersih BIGINT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (surat_id) REFERENCES surat_pp(id) ON DELETE CASCADE
+);
+
+-- 2. Nominatif Perjalanan Dinas
+CREATE TABLE IF NOT EXISTS nominatif_perjadin (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  surat_id INT NOT NULL,
+  urutan INT DEFAULT 1,
+  nama VARCHAR(200),
+  nip VARCHAR(30),
+  golongan VARCHAR(10),
+  tujuan VARCHAR(200),
+  tgl_berangkat DATE,
+  tgl_kembali DATE,
+  hari_harian INT DEFAULT 0,
+  tarif_harian BIGINT DEFAULT 0,
+  total_harian BIGINT DEFAULT 0,
+  hari_transport INT DEFAULT 0,
+  tarif_transport BIGINT DEFAULT 0,
+  total_transport BIGINT DEFAULT 0,
+  penginapan INT DEFAULT 0,
+  tarif_penginapan BIGINT DEFAULT 0,
+  total_penginapan BIGINT DEFAULT 0,
+  total_biaya BIGINT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (surat_id) REFERENCES surat_pp(id) ON DELETE CASCADE
+);
+
+-- 3. Nominatif ATK
+CREATE TABLE IF NOT EXISTS nominatif_atk (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  surat_id INT NOT NULL,
+  urutan INT DEFAULT 1,
+  nama_penerima VARCHAR(200),
+  nip VARCHAR(30),
+  jabatan VARCHAR(200),
+  unit_kerja VARCHAR(200),
+  nama_barang VARCHAR(300),
+  satuan VARCHAR(50),
+  volume DECIMAL(10,2) DEFAULT 1,
+  harga_satuan BIGINT DEFAULT 0,
+  total BIGINT DEFAULT 0,
+  keterangan TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (surat_id) REFERENCES surat_pp(id) ON DELETE CASCADE
+);
+
+-- 4. Tambahkan kolom ke satker (jika belum ada)
+ALTER TABLE satker
+  ADD COLUMN IF NOT EXISTS nama_bank_satker VARCHAR(200) DEFAULT 'Bank Mandiri KCP Kementerian Pekerjaan Umum',
+  ADD COLUMN IF NOT EXISTS no_rekening_satker VARCHAR(50) DEFAULT '8100126912781000',
+  ADD COLUMN IF NOT EXISTS nama_rekening_satker VARCHAR(200) DEFAULT 'BPG 139 DIREKTORAT SSPPS',
+  ADD COLUMN IF NOT EXISTS nama_bendahara VARCHAR(200) DEFAULT 'Saflir Kurin',
+  ADD COLUMN IF NOT EXISTS nama_pembuat_daftar VARCHAR(200);

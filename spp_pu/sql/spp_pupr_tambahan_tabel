@@ -1,0 +1,57 @@
+-- ============================================================
+-- TAMBAHAN TABEL: daftar_gaji & daftar_perjadin
+-- Jalankan di phpMyAdmin > spp_pupr > SQL
+-- ============================================================
+
+-- Tabel daftar gaji tenaga pendukung
+CREATE TABLE IF NOT EXISTS `daftar_gaji` (
+  `id`                  INT AUTO_INCREMENT PRIMARY KEY,
+  `surat_id`            INT NOT NULL,
+  `no_urut`             INT DEFAULT 1,
+  `nama`                VARCHAR(150) NOT NULL,
+  `posisi`              VARCHAR(200) DEFAULT NULL,
+  `kode_sub_komponen`   VARCHAR(60)  DEFAULT NULL,
+  `npwp`                VARCHAR(30)  DEFAULT NULL,
+  `nama_dalam_rekening` VARCHAR(150) DEFAULT NULL,
+  `bank`                VARCHAR(100) DEFAULT NULL,
+  `no_rekening`         VARCHAR(50)  DEFAULT NULL,
+  `jml_bulan_tagih`     INT DEFAULT 1,
+  `gaji_pokok`          BIGINT DEFAULT 0,
+  `tunjangan`           BIGINT DEFAULT 0,
+  `total_gaji`          BIGINT GENERATED ALWAYS AS (`gaji_pokok` + `tunjangan`) STORED,
+  `pph`                 BIGINT DEFAULT 0,
+  `penerimaan_bersih`   BIGINT GENERATED ALWAYS AS (`gaji_pokok` + `tunjangan` - `pph`) STORED,
+  `created_at`          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_surat_id` (`surat_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Daftar gaji tenaga pendukung per SPP';
+
+-- Tabel daftar nominatif perjalanan dinas
+CREATE TABLE IF NOT EXISTS `daftar_perjadin` (
+  `id`              INT AUTO_INCREMENT PRIMARY KEY,
+  `surat_id`        INT NOT NULL,
+  `no_urut`         INT DEFAULT 1,
+  `nama`            VARCHAR(150) NOT NULL,
+  `nip`             VARCHAR(25)  DEFAULT NULL,
+  `golongan`        VARCHAR(10)  DEFAULT NULL,
+  `jabatan`         VARCHAR(200) DEFAULT NULL,
+  `tujuan`          VARCHAR(200) DEFAULT NULL,
+  `tgl_berangkat`   DATE         DEFAULT NULL,
+  `tgl_pulang`      DATE         DEFAULT NULL,
+  `jml_hari_uang_harian` INT DEFAULT 0,
+  `tarif_uang_harian`    BIGINT DEFAULT 0,
+  `jml_hari_transport`   INT DEFAULT 0,
+  `tarif_transport`      BIGINT DEFAULT 0,
+  `jml_hari_penginapan`  INT DEFAULT 0,
+  `tarif_penginapan`     BIGINT DEFAULT 0,
+  `total_biaya`     BIGINT DEFAULT 0,
+  `keterangan`      TEXT DEFAULT NULL,
+  `created_at`      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_surat_id` (`surat_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Daftar nominatif perjalanan dinas per SPP';
+
+-- Index tambahan untuk surat_pp_akun jika belum ada
+ALTER TABLE `surat_pp_akun`
+  ADD COLUMN IF NOT EXISTS `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;

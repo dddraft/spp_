@@ -1,0 +1,169 @@
+-- ═══════════════════════════════════════════════════════
+-- v5: Tabel pendukung form SPP WYSIWYG
+-- Jalankan di phpMyAdmin → database spp_pupr
+-- ═══════════════════════════════════════════════════════
+
+-- 1. Tambah kolom detail ke tabel satker
+ALTER TABLE satker
+  ADD COLUMN IF NOT EXISTS nama_kementerian VARCHAR(100) DEFAULT 'Kementerian Pekerjaan Umum' AFTER nama,
+  ADD COLUMN IF NOT EXISTS kode_kementerian VARCHAR(10)  DEFAULT '145'    AFTER nama_kementerian,
+  ADD COLUMN IF NOT EXISTS nama_unit_org    VARCHAR(150) DEFAULT 'Direktorat Jenderal Prasarana Strategis' AFTER kode_kementerian,
+  ADD COLUMN IF NOT EXISTS kode_unit_org    VARCHAR(10)  DEFAULT '06'     AFTER nama_unit_org,
+  ADD COLUMN IF NOT EXISTS nama_provinsi    VARCHAR(100) DEFAULT 'DKI Jakarta' AFTER kode_unit_org,
+  ADD COLUMN IF NOT EXISTS kode_provinsi    VARCHAR(10)  DEFAULT '01'     AFTER nama_provinsi,
+  ADD COLUMN IF NOT EXISTS tempat           VARCHAR(100) DEFAULT 'Jakarta Selatan' AFTER kode_provinsi,
+  ADD COLUMN IF NOT EXISTS alamat           VARCHAR(255) DEFAULT 'Jl. Pattimura No. 20 Kebayoran Baru Jakarta' AFTER tempat,
+  ADD COLUMN IF NOT EXISTS kewenangan       VARCHAR(10)  DEFAULT 'KP'     AFTER alamat,
+  ADD COLUMN IF NOT EXISTS nomor_dipa       VARCHAR(100) DEFAULT ''       AFTER kewenangan,
+  ADD COLUMN IF NOT EXISTS tanggal_dipa     DATE         NULL             AFTER nomor_dipa,
+  ADD COLUMN IF NOT EXISTS nama_penguji_spp VARCHAR(100) DEFAULT 'Mohammad Rival' AFTER tanggal_dipa,
+  ADD COLUMN IF NOT EXISTS nama_ppk         VARCHAR(100) DEFAULT 'Citra Mayasari' AFTER nama_penguji_spp;
+
+-- Update data satker yang sudah ada
+UPDATE satker SET
+  nama_kementerian = 'Kementerian Pekerjaan Umum',
+  kode_kementerian = '145',
+  nama_unit_org    = 'Direktorat Jenderal Prasarana Strategis',
+  kode_unit_org    = '06',
+  nama_provinsi    = 'DKI Jakarta',
+  kode_provinsi    = '01',
+  tempat           = 'Jakarta Selatan',
+  alamat           = 'Jl. Pattimura No. 20 Kebayoran Baru Jakarta',
+  kewenangan       = 'KP',
+  nomor_dipa       = 'SP DIPA-145.06.1.691278/2026',
+  tanggal_dipa     = '2025-12-01',
+  nama_penguji_spp = 'Mohammad Rival',
+  nama_ppk         = 'Citra Mayasari'
+WHERE id = 1;
+
+-- 2. Tabel program (kode program per satker)
+CREATE TABLE IF NOT EXISTS program (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  satker_id    INT NOT NULL,
+  kode_program VARCHAR(30) NOT NULL,
+  nama_program VARCHAR(200),
+  is_aktif     TINYINT(1) DEFAULT 1,
+  FOREIGN KEY (satker_id) REFERENCES satker(id)
+);
+
+INSERT IGNORE INTO program (satker_id, kode_program, nama_program) VALUES
+(1, '145.06.GM', 'Program Prasarana Strategis'),
+(1, '145.06.WA', 'Program Dukungan Manajemen');
+
+-- 3. Tabel kegiatan (output kegiatan per program)
+CREATE TABLE IF NOT EXISTS kegiatan (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  satker_id    INT NOT NULL,
+  program_id   INT NOT NULL,
+  kode_kegiatan VARCHAR(20) NOT NULL,
+  kode_output   VARCHAR(30) NOT NULL,
+  nama_output   VARCHAR(255),
+  pagu_output   BIGINT DEFAULT 0,
+  is_aktif      TINYINT(1) DEFAULT 1,
+  FOREIGN KEY (satker_id)  REFERENCES satker(id),
+  FOREIGN KEY (program_id) REFERENCES program(id)
+);
+
+INSERT IGNORE INTO kegiatan (satker_id, program_id, kode_kegiatan, kode_output, nama_output, pagu_output) VALUES
+(1, 1, '7987', 'BMA.001', 'Penyediaan Data dan Informasi Prasarana Strategis', 1562765000),
+(1, 1, '7987', 'FAD.001', 'Perencanaan Pembangunan Prasarana Strategis', 1699775000),
+(1, 1, '7987', 'FAD.003', 'Program dan Anggaran Pembangunan Prasarana Strategis', 61849672000),
+(1, 1, '7987', 'FAD.004', 'Pengelola Kemitraan dan Koordinasi Pengadaan Lahan', 1622650000),
+(1, 1, '7987', 'FAE.001', 'Pemantauan dan Evaluasi Penyelenggaraan Prasarana Strategis', 1704261000),
+(1, 2, '7838', 'EBA.960', 'Layanan Organisasi dan Tata Kelola Internal SPBE', 156000000),
+(1, 2, '7838', 'EBA.962', 'Layanan Umum', 513223000),
+(1, 2, '7838', 'EBA.994', 'Layanan Perkantoran', 1654728000);
+
+-- 4. Tabel kegiatan_akun (MAK detail per output kegiatan)
+CREATE TABLE IF NOT EXISTS kegiatan_akun (
+  id                 INT AUTO_INCREMENT PRIMARY KEY,
+  kegiatan_id        INT NOT NULL,
+  subkomponen        VARCHAR(10),
+  nama_subkomponen   VARCHAR(100),
+  kode_akun          VARCHAR(10) NOT NULL,
+  nama_akun          VARCHAR(150),
+  kode_akun_lengkap  VARCHAR(60) NOT NULL,
+  pagu               BIGINT DEFAULT 0,
+  is_aktif           TINYINT(1) DEFAULT 1,
+  FOREIGN KEY (kegiatan_id) REFERENCES kegiatan(id)
+);
+
+-- MAK untuk BMA.001 (id=1)
+INSERT IGNORE INTO kegiatan_akun (kegiatan_id, subkomponen, nama_subkomponen, kode_akun, nama_akun, kode_akun_lengkap, pagu) VALUES
+(1, '100.0A', 'Penyediaan Data dan Informasi PS',  '521211', 'Belanja Bahan',                  '7987.BMA.001.100.0A.521211', 64410000),
+(1, '100.0A', 'Penyediaan Data dan Informasi PS',  '522191', 'Belanja Jasa Lainnya',            '7987.BMA.001.100.0A.522191', 227000000),
+(1, '100.0A', 'Penyediaan Data dan Informasi PS',  '524111', 'Belanja Perjalanan Dinas Biasa',  '7987.BMA.001.100.0A.524111', 267357000),
+(1, '100.0A', 'Penyediaan Data dan Informasi PS',  '524114', 'Belanja Perjalanan Dinas Paket Meeting Dalam Kota', '7987.BMA.001.100.0A.524114', 4432000),
+(1, '100.0A', 'Penyediaan Data dan Informasi PS',  '524119', 'Belanja Perjalanan Dinas Paket Meeting Luar Kota',  '7987.BMA.001.100.0A.524119', 146366000),
+(1, '101.0B', 'Pengembangan Aplikasi Ditjen PS',   '521211', 'Belanja Bahan',                  '7987.BMA.001.101.0B.521211', 83200000),
+(1, '101.0B', 'Pengembangan Aplikasi Ditjen PS',   '522131', 'Belanja Jasa Konsultan',          '7987.BMA.001.101.0B.52131',  390000000),
+(1, '101.0B', 'Pengembangan Aplikasi Ditjen PS',   '522141', 'Belanja Sewa',                   '7987.BMA.001.101.0B.522141', 380000000);
+
+-- MAK untuk FAE.001 (id=5)
+INSERT IGNORE INTO kegiatan_akun (kegiatan_id, subkomponen, nama_subkomponen, kode_akun, nama_akun, kode_akun_lengkap, pagu) VALUES
+(5, '100.0A', 'Pemantauan Pelaksanaan Kegiatan PS','521211', 'Belanja Bahan',                  '7987.FAE.001.100.0A.521211', 88964000),
+(5, '100.0A', 'Pemantauan Pelaksanaan Kegiatan PS','522141', 'Belanja Sewa',                   '7987.FAE.001.100.0A.522141', 2670000),
+(5, '100.0A', 'Pemantauan Pelaksanaan Kegiatan PS','522151', 'Belanja Jasa Profesi',            '7987.FAE.001.100.0A.522151', 3240000),
+(5, '100.0A', 'Pemantauan Pelaksanaan Kegiatan PS','522191', 'Belanja Jasa Lainnya',            '7987.FAE.001.100.0A.522191', 169076000),
+(5, '100.0A', 'Pemantauan Pelaksanaan Kegiatan PS','524111', 'Belanja Perjalanan Dinas Biasa',  '7987.FAE.001.100.0A.524111', 404470000),
+(5, '100.0A', 'Pemantauan Pelaksanaan Kegiatan PS','524113', 'Belanja Perjalanan Dinas Dalam Kota','7987.FAE.001.100.0A.524113', 3705000),
+(5, '100.0A', 'Pemantauan Pelaksanaan Kegiatan PS','524119', 'Belanja Perjalanan Dinas Paket Meeting Luar Kota','7987.FAE.001.100.0A.524119', 50000000),
+(5, '101.0A', 'Evaluasi dan Pelaporan Kegiatan PS','521211', 'Belanja Bahan',                  '7987.FAE.001.101.0A.521211', 81224000),
+(5, '101.0A', 'Evaluasi dan Pelaporan Kegiatan PS','522141', 'Belanja Sewa',                   '7987.FAE.001.101.0A.522141', 8475000),
+(5, '101.0A', 'Evaluasi dan Pelaporan Kegiatan PS','522151', 'Belanja Jasa Profesi',            '7987.FAE.001.101.0A.522151', 3600000),
+(5, '101.0A', 'Evaluasi dan Pelaporan Kegiatan PS','522191', 'Belanja Jasa Lainnya',            '7987.FAE.001.101.0A.522191', 430662000),
+(5, '101.0A', 'Evaluasi dan Pelaporan Kegiatan PS','524111', 'Belanja Perjalanan Dinas Biasa',  '7987.FAE.001.101.0A.524111', 404470000),
+(5, '101.0A', 'Evaluasi dan Pelaporan Kegiatan PS','524113', 'Belanja Perjalanan Dinas Dalam Kota','7987.FAE.001.101.0A.524113', 3705000),
+(5, '101.0A', 'Evaluasi dan Pelaporan Kegiatan PS','524119', 'Belanja Perjalanan Dinas Paket Meeting Luar Kota','7987.FAE.001.101.0A.524119', 50000000);
+
+-- 5. Tabel surat_pp (dokumen SPP)
+CREATE TABLE IF NOT EXISTS surat_pp (
+  id                   INT AUTO_INCREMENT PRIMARY KEY,
+  nomor_surat          VARCHAR(100),
+  jenis_id             INT,
+  satker_id            INT NOT NULL,
+  tahun                YEAR,
+  tanggal_surat        DATE,
+  kode_program         VARCHAR(30),
+  kode_kegiatan        VARCHAR(20),
+  kode_output          VARCHAR(30),
+  sub_komponen         VARCHAR(20),
+  kode_akun            VARCHAR(10),
+  uraian               TEXT,
+  jumlah_uang          BIGINT DEFAULT 0,
+  jenis_belanja_kode   VARCHAR(5),
+  jenis_belanja_nama   VARCHAR(100),
+  nama_penerima        VARCHAR(150),
+  alamat_penerima      VARCHAR(255),
+  bank_penerima        VARCHAR(100),
+  no_rekening          VARCHAR(50),
+  npwp                 VARCHAR(30),
+  no_sk_spk            VARCHAR(100),
+  tanggal_sk_spk       DATE NULL,
+  nilai_spk            BIGINT DEFAULT 0,
+  penjelasan           TEXT,
+  doc_pendukung        INT DEFAULT 0,
+  doc_surat_bukti      INT DEFAULT 0,
+  doc_tanda_setoran    INT DEFAULT 0,
+  bulan_gaji           VARCHAR(20),
+  ke_gaji              INT DEFAULT 1,
+  status               ENUM('draft','dikirim','diverifikasi','disetujui','ditolak','batal') DEFAULT 'draft',
+  dibuat_oleh          INT,
+  created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (satker_id) REFERENCES satker(id)
+);
+
+-- 6. Tabel surat_pp_akun (detail MAK per surat)
+CREATE TABLE IF NOT EXISTS surat_pp_akun (
+  id                 INT AUTO_INCREMENT PRIMARY KEY,
+  surat_id           INT NOT NULL,
+  tabel_type         ENUM('I','II') NOT NULL,
+  kegiatan_akun_id   INT,
+  kode_akun_lengkap  VARCHAR(60),
+  pagu_dipa          BIGINT DEFAULT 0,
+  spm_lalu           BIGINT DEFAULT 0,
+  spp_ini            BIGINT DEFAULT 0,
+  jumlah_sd_spp      BIGINT DEFAULT 0,
+  sisa_dana          BIGINT DEFAULT 0,
+  FOREIGN KEY (surat_id) REFERENCES surat_pp(id) ON DELETE CASCADE
+);
